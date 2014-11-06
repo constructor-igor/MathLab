@@ -1,17 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using NLog;
 
 namespace Ex1
 {
     class Program
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         static void Main()
         {
-            SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1000, K = 0.1}, new ExperimentDefinition{M=1000000, DeltaM = 1});
-            SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1, K = 1}, new ExperimentDefinition { M = 10, DeltaM = 1 });
+            //SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1000, K = 0.1}, new ExperimentDefinition{M=1000000, DeltaM = 1});
+            //SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1, K = 1}, new ExperimentDefinition { M = 10, DeltaM = 1 });
 
             var populations = SinglePopulationDefinition.New(3, X0: 1000, k: 0.1);
+//            var populations = new List<SinglePopulationDefinition>();
+//            populations.Add(new SinglePopulationDefinition{K=2, X0=1000});
+//            populations.Add(new SinglePopulationDefinition{K=3, X0=1000});
+//            populations.Add(new SinglePopulationDefinition{K=5, X0=1000});
             MultiPopulationContinuousExperiment(populations, new ExperimentDefinition {M = 1000000, DeltaM = 1});
         }
 
@@ -23,12 +30,12 @@ namespace Ex1
             double M = experimentDefinition.M;
             double deltaM = experimentDefinition.DeltaM;
 
-            Console.WriteLine();
-            Console.WriteLine("M={0}, X0={1}, k={2}, deltaM={3}", M, X0, growthRateK, deltaM);
+            logger.Info("");
+            logger.Info("M={0}, X0={1}, k={2}, deltaM={3}", M, X0, growthRateK, deltaM);
 
             var singleContinuousPopulation = new SingleContinuousPopulation(X0, growthRateK);
             double analyticalSolvedTime = singleContinuousPopulation.CalculateT(M);
-            Console.WriteLine("analytical calculated t = {0}, population = {1}", analyticalSolvedTime, singleContinuousPopulation.X(analyticalSolvedTime));
+            logger.Info("analytical calculated t = {0}, population = {1}", analyticalSolvedTime, singleContinuousPopulation.X(analyticalSolvedTime));
 
             double X = X0;
             double t = 0;
@@ -40,7 +47,7 @@ namespace Ex1
                 iterations++;
             }
 
-            Console.WriteLine("simulation calculated t = {0}, population = {1}, iterations = {2}", 
+            logger.Info("simulation calculated t = {0}, population = {1}, iterations = {2}", 
                 t, singleContinuousPopulation.X(t), iterations);
         }
 
@@ -49,24 +56,35 @@ namespace Ex1
             double M = experimentDefinition.M;
             double deltaM = experimentDefinition.DeltaM;
 
-            Console.WriteLine();
-            Console.WriteLine("multi population experiment");
-            Console.WriteLine("M={0}, deltaM={1}", M, deltaM);
+            logger.Info("");
+            logger.Info("multi population experiment");
+            logger.Info("M={0}, deltaM={1}", M, deltaM);
+
+            var stringBuilder = new StringBuilder();
+            for (int i = 0; i < definitions.Count; i++)
+            {
+                stringBuilder.AppendFormat("(X0{0} = {1}, K{0}={2}), ", i, definitions[i].X0, definitions[i].K);
+            }
+            logger.Info("initial populations state: {0}", stringBuilder);
 
             double singleDeltaM = deltaM/definitions.Count;
             var populations = definitions.Select(definition => new SingleContinuousPopulation(definition.X0, definition.K)).ToList();
 
             double X = definitions.Sum(d => d.X0);
+            
             double t = 0;
             int iterations = 0;
+            logger.Trace("#{0}, time={1}, X={2}", iterations, t, X);
             while (Math.Abs(X - M) > deltaM)
-            {
-                t += populations.Min(d => d.CalculateDeltaT(singleDeltaM, t));
+            {                
+                double deltaT = populations.Min(d => d.CalculateDeltaT(singleDeltaM, t));
+                t += deltaT;
                 X = populations.Sum(d => d.X(t));
                 iterations++;
+                logger.Trace("#{0}, time={1}, X={2}", iterations, t, X);
             }
 
-            Console.WriteLine("simulation calculated t = {0}, populations = {1}, iterations = {2}",
+            logger.Info("simulation calculated t = {0}, populations = {1}, iterations = {2}",
                 t, populations.Sum(d => d.X(t)), iterations);
         }
     }
