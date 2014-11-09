@@ -14,11 +14,11 @@ namespace Ex1
             //SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1000, K = 0.1}, new ExperimentDefinition{M=1000000, DeltaM = 1});
             //SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1, K = 1}, new ExperimentDefinition { M = 10, DeltaM = 1 });
 
-            var populations = SinglePopulationDefinition.New(3, X0: 1000, k: 0.1);
-//            var populations = new List<SinglePopulationDefinition>();
-//            populations.Add(new SinglePopulationDefinition{K=2, X0=1000});
-//            populations.Add(new SinglePopulationDefinition{K=3, X0=1000});
-//            populations.Add(new SinglePopulationDefinition{K=5, X0=1000});
+//            var populations = SinglePopulationDefinition.New(3, X0: 1000, k: 0.1);
+            var populations = new List<SinglePopulationDefinition>();
+            populations.Add(new SinglePopulationDefinition{K=2, X0=1000});
+            populations.Add(new SinglePopulationDefinition{K=0.1, X0=1000});
+            populations.Add(new SinglePopulationDefinition{K=10, X0=1000});
             MultiPopulationContinuousExperiment(populations, new ExperimentDefinition {M = 1000000, DeltaM = 1});
         }
 
@@ -75,9 +75,13 @@ namespace Ex1
             double t = 0;
             int iterations = 0;
             logger.Trace("#{0}, time={1}, X={2}", iterations, t, X);
-            while (Math.Abs(X - M) > deltaM)
-            {                
-                double deltaT = populations.Min(d => d.CalculateDeltaT(singleDeltaM, t));
+            while (X<M && M - X > deltaM)
+            {
+                double actualDeltaM = Math.Max(deltaM, Math.Abs(M - X - deltaM));
+                double actualSingleDeltaM = actualDeltaM / definitions.Count;
+
+                //double deltaT = populations.Min(d => d.CalculateDeltaT(singleDeltaM, t));
+                double deltaT = populations.Min(d => d.CalculateDeltaT(actualSingleDeltaM, t));
                 t += deltaT;
                 X = populations.Sum(d => d.X(t));
                 iterations++;
