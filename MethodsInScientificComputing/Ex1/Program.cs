@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NLog;
 
@@ -14,11 +15,42 @@ namespace Ex1
             //SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1000, K = 0.1}, new ExperimentDefinition{M=1000000, DeltaM = 1});
             //SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1, K = 1}, new ExperimentDefinition { M = 10, DeltaM = 1 });
 
-//            var populations = SinglePopulationDefinition.New(3, X0: 1000, k: 0.1);
+            //MultiSamePopulations();
+            //MultiDifferentPopulations();
+
+            MultiDependentPopulations();
+        }
+
+        private static void MultiDependentPopulations()
+        {
+            var experiment = new MultiDependentPopulationDiscreteExperiment();
+            var populations = new List<SingleDependentPopulationDefinition>();
+            
+            var singleDependentPopulationDefinition1 = new SingleDependentPopulationDefinition(r:2, x0:1000);
+            singleDependentPopulationDefinition1.Factors.Add(new DependentPopulationFactor(k:0));
+            singleDependentPopulationDefinition1.Factors.Add(new DependentPopulationFactor(k:0.01));
+            populations.Add(singleDependentPopulationDefinition1);
+
+            var singleDependentPopulationDefinition2 = new SingleDependentPopulationDefinition(r: 2, x0: 1000);
+            singleDependentPopulationDefinition2.Factors.Add(new DependentPopulationFactor(k: 0.1));
+            singleDependentPopulationDefinition2.Factors.Add(new DependentPopulationFactor(k: 0));          
+            populations.Add(singleDependentPopulationDefinition2);
+
+            experiment.Run(populations, new ExperimentDefinition { M = 1000000, DeltaM = 1 });
+        }
+
+        private static void MultiSamePopulations()
+        {
+            var populations = SinglePopulationDefinition.New(3, X0: 1000, k: 0.1);
+            MultiPopulationContinuousExperiment(populations, new ExperimentDefinition { M = 1000000, DeltaM = 1 });
+        }
+
+        private static void MultiDifferentPopulations()
+        {
             var populations = new List<SinglePopulationDefinition>();
-            populations.Add(new SinglePopulationDefinition{K=2, X0=1000});
-            populations.Add(new SinglePopulationDefinition{K=0.1, X0=1000});
-            populations.Add(new SinglePopulationDefinition{K=10, X0=1000});
+            populations.Add(new SinglePopulationDefinition {K = 2, X0 = 1000});
+            populations.Add(new SinglePopulationDefinition {K = 0.1, X0 = 1000});
+            populations.Add(new SinglePopulationDefinition {K = 10, X0 = 1000});
             MultiPopulationContinuousExperiment(populations, new ExperimentDefinition {M = 1000000, DeltaM = 1});
         }
 
