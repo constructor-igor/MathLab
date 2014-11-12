@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NLog;
 
@@ -16,9 +15,10 @@ namespace Ex1
             //SinglePopulationContinuousExperiment(new SinglePopulationDefinition { X0 = 1, K = 1}, new ExperimentDefinition { M = 10, DeltaM = 1 });
 
             //MultiSamePopulations();
-            //MultiDifferentPopulations();
+            MultiDifferentPopulations();
+            //MultiDifferentPopulations_BinarySearch();
 
-            MultiDependentPopulations();
+            //MultiDependentPopulations();
         }
 
         private static void MultiDependentPopulations()
@@ -52,6 +52,15 @@ namespace Ex1
             populations.Add(new SinglePopulationDefinition {K = 0.1, X0 = 1000});
             populations.Add(new SinglePopulationDefinition {K = 10, X0 = 1000});
             MultiPopulationContinuousExperiment(populations, new ExperimentDefinition {M = 1000000, DeltaM = 1});
+        }
+
+        private static void MultiDifferentPopulations_BinarySearch()
+        {
+            var populations = new List<SinglePopulationDefinition>();
+            populations.Add(new SinglePopulationDefinition { K = 2, X0 = 1000 });
+            populations.Add(new SinglePopulationDefinition { K = 0.1, X0 = 1000 });
+            populations.Add(new SinglePopulationDefinition { K = 10, X0 = 1000 });
+            MultiPopulationContinuousBinarySearchExperiment(populations, new ExperimentDefinition { M = 1000000, DeltaM = 1 });
         }
 
         private static void SinglePopulationContinuousExperiment(SinglePopulationDefinition singlePopulationDefinition, ExperimentDefinition experimentDefinition)
@@ -122,6 +131,64 @@ namespace Ex1
 
             logger.Info("simulation calculated t = {0}, populations = {1}, iterations = {2}",
                 t, populations.Sum(d => d.X(t)), iterations);
+        }
+        private static void MultiPopulationContinuousBinarySearchExperiment(List<SinglePopulationDefinition> definitions, ExperimentDefinition experimentDefinition)
+        {
+            double M = experimentDefinition.M;
+            double deltaM = experimentDefinition.DeltaM;
+
+            logger.Info("");
+            logger.Info("multi population experiment");
+            logger.Info("M={0}, deltaM={1}", M, deltaM);
+
+            var stringBuilder = new StringBuilder();
+            for (int i = 0; i < definitions.Count; i++)
+            {
+                stringBuilder.AppendFormat("(X0{0} = {1}, K{0}={2}), ", i, definitions[i].X0, definitions[i].K);
+            }
+            logger.Info("initial populations state: {0}", stringBuilder);
+
+            double singleDeltaM = deltaM / definitions.Count;
+            var populations = definitions.Select(definition => new SingleContinuousPopulation(definition.X0, definition.K)).ToList();
+
+            double X = definitions.Sum(d => d.X0);
+
+            double t = 0;
+            double minT = 0;
+            double maxT = 2;
+
+            double Xmin = populations.Sum(d => d.X(minT));
+            double Xmax = populations.Sum(d => d.X(maxT));
+
+            int iterations = 0;
+            logger.Trace("#{0}, times={1}..{2}, X={3}..{4}", iterations, minT, maxT, Xmin, Xmax);
+            while (X < M && M - X > deltaM)
+            {
+                if (Xmax < M)
+                {
+                    maxT = Math.Pow(maxT, 2);
+                    Xmax = populations.Sum(d => d.X(maxT));
+                    logger.Trace("#{0}, times={1}..{2}, X={3}..{4}", iterations++, minT, maxT, Xmin, Xmax);
+                    continue;                    
+                }
+
+                double midT = minT + (maxT - minT)/2;
+                double Xmid = populations.Sum(d => d.X(midT));
+
+                if (Xmid >= M)
+                {
+                    maxT = midT;
+                    Xmax = Xmid;
+                }
+                else
+                {
+                    minT = midT;
+                    X = Xmid;
+                    Xmin = Xmid;
+                }
+                logger.Trace("#{0}, times={1}..{2}, X={3}..{4}", iterations++, minT, maxT, Xmin, Xmax);
+            }
+            logger.Trace("#{0}, times={1}..{2}, X={3}..{4}, M={5}, M-X={6}", iterations, minT, maxT, Xmin, Xmax, M, M-X);
         }
     }
 
