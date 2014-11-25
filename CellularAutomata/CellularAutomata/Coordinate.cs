@@ -9,5 +9,10 @@
             X = x;
             Y = y;
         }
+
+        public bool AreEqual(Coordinate other)
+        {
+            return X == other.X && Y == other.Y;
+        }
     }
 }

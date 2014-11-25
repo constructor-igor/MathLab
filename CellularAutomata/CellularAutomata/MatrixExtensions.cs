@@ -15,6 +15,17 @@ namespace CellularAutomata
                 }
                 Console.WriteLine();
             }
+            Console.WriteLine();
+        }
+
+        public static void Print(this MatrixPath matrixPath, string caption)
+        {
+            Console.WriteLine(caption);
+            foreach (Coordinate coordinate in matrixPath.Path)
+            {
+                Console.Write("{0}x{1} - ", coordinate.X, coordinate.Y);
+            }
+            Console.WriteLine();
         }
 
         public static bool AreEqualTo(this Matrix<double> matrixX, Matrix<double> matrixY)

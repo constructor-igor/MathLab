@@ -20,10 +20,14 @@ namespace CellularAutomata
             var M = new Matrix<int>(dataM);
             var target = new Coordinate(x:1, y:2);
 
-            CA2 algorithm = new CA2();
+            var algorithm = new CA2();
 
             Matrix<double> concentrations = algorithm.Run(M, target, targetValue: 2);
-            concentrations.Print("result");
+            concentrations.Print("concentrations result");
+
+            var source = new Coordinate(5, 5);
+            MatrixPath mazePath = algorithm.FindPath(concentrations, source, target);
+            mazePath.Print("found maze path: ");
         }
     }
 }

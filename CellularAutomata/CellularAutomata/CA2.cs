@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CellularAutomata
@@ -49,6 +51,53 @@ namespace CellularAutomata
             }
 
             return C;
+        }
+
+        public MatrixPath FindPath(Matrix<double> concentrations, Coordinate source, Coordinate target)
+        {
+            var matrixPath = new MatrixPath();
+            Coordinate current = source;
+            matrixPath.Add(source);
+
+            int iteration = 0;
+            while (!current.AreEqual(target))
+            {
+                int i = current.X - 1;
+                int j = current.Y - 1;
+                //double concentration = concentrations.Data[i][j];
+
+                var pointers = new List<Pointer>();
+
+                var upValue = new Pointer(new Coordinate(i - 1, j), concentrations.GetValue(i - 1, j));
+                var dnValue = new Pointer(new Coordinate(i + 1, j), concentrations.GetValue(i + 1, j));
+                var leftValue = new Pointer(new Coordinate(i, j - 1), concentrations.GetValue(i, j - 1));
+                var rightValue = new Pointer(new Coordinate(i, j + 1), concentrations.GetValue(i, j + 1));
+                pointers.Add(upValue);
+                pointers.Add(dnValue);
+                pointers.Add(leftValue);
+                pointers.Add(rightValue);
+
+                pointers.Sort((p1, p2)=> Math.Sign(p1.Concentration-p2.Concentration));
+                Pointer maxPointer = pointers.Last();
+                current = new Coordinate(maxPointer.Coordinate.X+1, maxPointer.Coordinate.Y+1);
+                matrixPath.Add(current);
+
+                matrixPath.Print(String.Format("iteration {0}: ", iteration++));
+            }
+
+            return matrixPath;
+        }
+
+        internal class Pointer
+        {
+            internal Coordinate Coordinate;
+            internal double Concentration;
+
+            internal Pointer(Coordinate coordinate, double concentration)
+            {
+                Coordinate = coordinate;
+                Concentration = concentration;
+            }
         }
     }
 }

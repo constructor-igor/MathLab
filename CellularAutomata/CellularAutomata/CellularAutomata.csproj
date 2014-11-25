@@ -45,6 +45,7 @@
     <Compile Include="Coordinate.cs" />
     <Compile Include="Matrix.cs" />
     <Compile Include="MatrixExtensions.cs" />
+    <Compile Include="MatrixPath.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
