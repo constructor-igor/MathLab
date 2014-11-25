@@ -79,6 +79,11 @@ namespace CellularAutomata
 
                 pointers.Sort((p1, p2)=> Math.Sign(p1.Concentration-p2.Concentration));
                 Pointer maxPointer = pointers.Last();
+                if (maxPointer.Concentration == 0)
+                {
+                    matrixPath = null;
+                    break;
+                }
                 current = new Coordinate(maxPointer.Coordinate.X+1, maxPointer.Coordinate.Y+1);
                 matrixPath.Add(current);
 
