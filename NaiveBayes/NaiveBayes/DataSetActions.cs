@@ -9,7 +9,6 @@ namespace NaiveBayes
 {
     public class DataSetActions
     {
-        static readonly object LockObject = new object();
         public static DataSet LoadFromFile(string pathToFile)
         {
             DataSetDescriptor descriptor = new DataSetDescriptor();
@@ -24,8 +23,8 @@ namespace NaiveBayes
             }
 
             DataSet dataSet = new DataSet(descriptor);
-
-            for (int i = 1; i < lines.Length; i++)
+            DataSetItem[] items = new DataSetItem[lines.Length];
+            Parallel.For(1, lines.Length, i =>
             {
                 string[] dataItems = lines[i].Split(',');
 
@@ -34,8 +33,11 @@ namespace NaiveBayes
                 {
                     dataItem.Features.Add(Double.Parse(dataItems[j]));
                 }
-                dataSet.Add(dataItem);
-            }
+                //lock(Lock)
+                //    dataSet.Add(dataItem);
+                items[i] = dataItem;
+            });
+            dataSet.Add(items);
 
             return dataSet;
         }
@@ -56,7 +58,7 @@ namespace NaiveBayes
         {
             TrainedResult trainedResult = new TrainedResult();
             List<string> allClassificators = dataSet.Descriptor.ClassificatorValues;
-            foreach (string classificator in allClassificators)
+            Parallel.ForEach(allClassificators, classificator =>
             {
                 List<DataSetItem> subSet = dataSet.Items.Where(i => i.Classificator == classificator).ToList();
 
@@ -66,7 +68,7 @@ namespace NaiveBayes
                     MeanVariance meanVariance = featureValues.CalculateMeanVariance();
                     trainedResult.AddStatistics(classificator, dataSet.Descriptor.Features[index], meanVariance);
                 }
-            }
+            });
             return trainedResult;
         }
 
@@ -101,8 +103,6 @@ namespace NaiveBayes
                 }
                 evidencePerClassificator[classificatorValue] = evidenceClassificator;
                 InterlockedEx.Add(ref evidence, evidenceClassificator);
-//                lock(LockObject)
-//                    evidence += evidenceClassificator;
             });
 
             double result = evidencePerClassificator[classificator]/evidence;

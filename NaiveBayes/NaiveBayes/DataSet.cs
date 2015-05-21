@@ -17,6 +17,15 @@ namespace NaiveBayes
             Items.Add(dataItem);
             Descriptor.AddClassificator(dataItem.Classificator);
         }
+
+        public void Add(DataSetItem[] dataItem)
+        {
+            foreach (DataSetItem dataSetItem in dataItem)
+            {
+                if (dataSetItem!=null)
+                    Add(dataSetItem);
+            }
+        }
     }
 
     public class DataSetDescriptor
